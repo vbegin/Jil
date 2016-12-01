@@ -1450,5 +1450,28 @@ namespace JilTests
             var json = JSON.SerializeDynamic(dyn, Options.CamelCase);
             Assert.AreEqual("{\"fooBar\":\"blah\"}", json);
         }
+
+        [TestMethod]
+        public void Issue224()
+        {
+            var tokenResponse = 
+                new Newtonsoft.Json.Linq.JObject(
+                    new Newtonsoft.Json.Linq.JProperty("userName", "test@123"),
+                    new Newtonsoft.Json.Linq.JProperty("access_token", "my access token"),
+                    new Newtonsoft.Json.Linq.JProperty("token_type", "bearer")
+                );
+
+            var json = JSON.SerializeDynamic(tokenResponse);
+            Assert.AreEqual("{\"userName\":\"test@123\",\"access_token\":\"my access token\",\"token_type\":\"bearer\"}", json);
+        }
+
+        [TestMethod]
+        public void Issue230()
+        {
+            var dyn = JSON.DeserializeDynamic("\"2000\"", Options.ISO8601);
+            var json = JSON.SerializeDynamic(dyn, Options.ISO8601);
+
+            Assert.AreEqual("\"2000\"", json);
+        }
     }
 }

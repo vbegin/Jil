@@ -1532,32 +1532,6 @@ namespace JilTests
                 }
             }
 
-            using (var str = new StringReader("\"1900-01-01T1234\""))
-            {
-                try
-                {
-                    JSON.Deserialize<DateTime>(str, Options.ISO8601);
-                    Assert.Fail("Shouldn't be possible");
-                }
-                catch (DeserializationException e)
-                {
-                    Assert.AreEqual("Expected :", e.Message);
-                }
-            }
-
-            using (var str = new StringReader("\"19000101T12:34\""))
-            {
-                try
-                {
-                    JSON.Deserialize<DateTime>(str, Options.ISO8601);
-                    Assert.Fail("Shouldn't be possible");
-                }
-                catch (DeserializationException e)
-                {
-                    Assert.AreEqual("Unexpected separator", e.Message);
-                }
-            }
-
             using (var str = new StringReader("\"19000101T1234:56\""))
             {
                 try
@@ -1568,19 +1542,6 @@ namespace JilTests
                 catch (DeserializationException e)
                 {
                     Assert.AreEqual("Unexpected separator in ISO8601 time", e.Message);
-                }
-            }
-
-            using (var str = new StringReader("\"19000101T123456+00:30\""))
-            {
-                try
-                {
-                    JSON.Deserialize<DateTime>(str, Options.ISO8601);
-                    Assert.Fail("Shouldn't be possible");
-                }
-                catch (DeserializationException e)
-                {
-                    Assert.AreEqual("Unexpected separator in ISO8601 timezone offset", e.Message);
                 }
             }
 
@@ -7392,6 +7353,80 @@ namespace JilTests
             var bean = JSON.Deserialize<_Issue225>(json);
             Assert.IsNotNull(bean);
             Assert.AreEqual(_Issue225_1.Value0, bean.PackagedType);
+        }
+
+        class _Issue176_1
+        {
+            public List<int> Foo { get; set; }
+        }
+
+        class _Issue176_1_Derived : _Issue176_1
+        {
+            public new int Foo { get; set; }
+        }
+
+        class _Issue176_2
+        {
+            public List<int> Foo { get; set; }
+        }
+
+        class _Issue176_2_Derived : _Issue176_2
+        {
+            public new int[] Foo { get; set; }
+        }
+
+        class _Issue176_3
+        {
+            public int Foo { get; set; }
+        }
+
+        class _Issue176_3_Derived : _Issue176_3
+        {
+            public new string Foo { get; set; }
+        }
+
+        [TestMethod]
+        public void Issue176()
+        {
+            {
+                JSON.Deserialize<_Issue176_1_Derived>("{}");
+                var res = JSON.Deserialize<_Issue176_1_Derived>("{\"Foo\":123}");
+                Assert.IsNotNull(res);
+                Assert.AreEqual(123, res.Foo);
+            }
+
+            {
+                JSON.Deserialize<_Issue176_2_Derived>("{}");
+                var res = JSON.Deserialize<_Issue176_2_Derived>("{\"Foo\":[1,2,3]}");
+                Assert.IsNotNull(res);
+                Assert.IsNotNull(res.Foo);
+                Assert.AreEqual(3, res.Foo.Length);
+                Assert.AreEqual(1, res.Foo[0]);
+                Assert.AreEqual(2, res.Foo[1]);
+                Assert.AreEqual(3, res.Foo[2]);
+            }
+
+            {
+                JSON.Deserialize<_Issue176_3_Derived>("{}");
+                var res = JSON.Deserialize< _Issue176_3_Derived>("{\"Foo\":\"Bar\"}");
+                Assert.IsNotNull(res);
+                Assert.AreEqual("Bar", res.Foo);
+            }
+        }
+
+        [TestMethod]
+        public void Issue229()
+        {
+            var expected = new DateTime(2016, 05, 06, 15, 57, 34, DateTimeKind.Utc);
+
+            var result = JSON.Deserialize<_Issue229>("{\"createdate\":\"2016-05-06T15:57:34.000+0000\"}", new Options(dateFormat: Jil.DateTimeFormat.ISO8601));
+
+            Assert.AreEqual(expected, result.createdate);
+        }
+
+        class _Issue229
+        {
+            public DateTime createdate { get; set; }
         }
 
 #if !DEBUG
